@@ -60,7 +60,8 @@ try:
     Line = gcoder_line.GLine
     LightLine = gcoder_line.GLightLine
 except Exception, e:
-    logging.warning("Memory-efficient GCoder implementation unavailable: %s" % e)
+    #delete by fxue
+    #logging.warning("Memory-efficient GCoder implementation unavailable: %s" % e)
     Line = PyLine
     LightLine = PyLightLine
 

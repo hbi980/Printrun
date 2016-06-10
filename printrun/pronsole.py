@@ -889,6 +889,16 @@ class pronsole(cmd.Cmd):
         self.fgcode.estimate_duration()
         self.filename = filename
 
+    def load_gcode_data(self, data, layer_callback = None, gcode = None):
+        if gcode is None:
+            self.fgcode = gcoder.LightGCode(deferred = True)
+        else:
+            self.fgcode = gcode
+        self.fgcode.prepare(data,
+                            get_home_pos(self.build_dimensions_list),
+                            layer_callback = layer_callback)
+        self.fgcode.estimate_duration()
+
     def complete_load(self, text, line, begidx, endidx):
         s = line.split()
         if len(s) > 2:

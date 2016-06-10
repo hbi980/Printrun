@@ -66,6 +66,13 @@ def MainToolbar(root, parentpanel = None, use_wrapsizer = False):
 
     self.AddStretchSpacer(prop = 1)
 
+    
+    root.linebtn = make_autosize_button(parentpanel, _("Draw line"), root.drawline, _("Draw line"), self)
+    root.arcbtn = make_autosize_button(parentpanel, _("Draw Arc"), root.drawarc, _("Draw Arc"), self)
+    root.countbtn = make_autosize_button(parentpanel, _("Again"), root.drawcount, _("Again"), self)
+    root.clearbtn = make_autosize_button(parentpanel, _("Clear"), root.drawclear, _("Clear"), self)
+    #root.splitbtn = make_autosize_button(parentpanel, _("|"), root.drawclear, _("|"), self)
+
     root.loadbtn = make_autosize_button(parentpanel, _("Load file"), root.loadfile, _("Load a 3D model file"), self)
     root.sdbtn = make_autosize_button(parentpanel, _("SD"), root.sdmenu, _("SD Card Printing"), self)
     root.sdbtn.Reparent(parentpanel)

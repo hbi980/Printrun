@@ -62,6 +62,8 @@ from .settings import wxSetting, HiddenSetting, StringSetting, SpinSetting, \
 from printrun import gcoder
 from .pronsole import REPORT_NONE, REPORT_POS, REPORT_TEMP, REPORT_MANUAL
 
+from .gcode import InputWindow,LinesCode,ArcsCode,CodeCount
+
 class ConsoleOutputHandler(object):
     """Handle console output. All messages go through the logging submodule. We setup a logging handler to get logged messages and write them to both stdout (unless a log file path is specified, in which case we add another logging handler to write to this file) and the log panel.
     We also redirect stdout and stderr to ourself to catch print messages and al."""
@@ -135,6 +137,7 @@ class PronterWindow(MainWindow, pronsole.pronsole):
     display_gauges = property(_get_display_gauges)
 
     def __init__(self, app, filename = None, size = winsize):
+        self.memory_gcode = []
         pronsole.pronsole.__init__(self)
         self.app = app
         self.window_ready = False
@@ -181,7 +184,10 @@ class PronterWindow(MainWindow, pronsole.pronsole):
         MainWindow.__init__(self, None, title = _("Pronterface"), size = size)
         if self.settings.last_window_maximized:
             self.Maximize()
-        self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+        
+        #delete by fxue
+        #self.SetIcon(wx.Icon(iconfile("pronterface.png"), wx.BITMAP_TYPE_PNG))
+
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MAXIMIZE, self.on_maximize)
         self.window_ready = True
@@ -1308,6 +1314,40 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
         path = self.filehistory.GetHistoryFile(fileid)
         self.loadfile(None, filename = path)
 
+    def drawline(self, event):
+      self.memory_gcode += LinesCode()
+      if self.memory_gcode:
+        self.load_gcode_async("memory")
+
+    def drawarc(self, event):
+      self.memory_gcode += ArcsCode()
+      if self.memory_gcode:
+        self.load_gcode_async("memory")
+
+    def drawcount(self, event):      
+      if self.memory_gcode:        
+        self.count = CodeCount()
+        gcode = []
+        gcode.extend(self.memory_gcode)
+        for i in range(1,self.count + 1):
+          gcode.extend('\r\n')
+          gcode.extend('\r\n')
+          gcode.extend(self.memory_gcode)
+
+        self.memory_gcode = gcode
+        self.load_gcode_async("memory")
+      else:
+        self.drawarc(event)
+
+    def drawclear(self, event):
+      self.memory_gcode = [';LAYER']
+      self.load_gcode_async("memory")
+
+      #dialog = InputWindow(None, 'Small Editor')
+      #self.memory_gcode = dialog.gcode.splitlines()
+      #if dialog.gcode:
+      #  self.load_gcode_async("memory")
+
     def loadfile(self, event, filename = None):
         if self.slicing and self.slicep is not None:
             self.slicep.terminate()
@@ -1367,6 +1407,11 @@ Printrun. If not, see <http://www.gnu.org/licenses/>."""
 
     def load_gcode_async_thread(self, gcode):
         try:
+          if self.filename == 'memory' and self.memory_gcode:
+            self.load_gcode_data(self.memory_gcode,
+                            layer_callback = self.layer_ready_cb,
+                            gcode = gcode)
+          else:
             self.load_gcode(self.filename,
                             layer_callback = self.layer_ready_cb,
                             gcode = gcode)
